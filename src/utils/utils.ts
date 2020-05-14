@@ -3,10 +3,9 @@ import { Base64 } from 'js-base64'
 import qs from 'qs'
 // import { baseUrl } from './url'
 import { Toast, Notify } from 'vant'
-import { Message } from 'element-ui';
 import store from 'store'
-import {http} from '@/axios/http'
-import * as API from '@/request/api'
+import { http } from '@/axios/http'
+import * as API from '@/axios/api'
 const util = {
     deep: (params: any) => {// 深拷贝
         if (params === '') { return ''; }
@@ -16,10 +15,10 @@ const util = {
   },
 };
 // 1 接口请求添加签名加密
-export const doSignToken = (url: string, appKey: string, appSecret: string, data: any) => {
+export const doSignToken = (url: string, appKey: string, appSecret: string, doSignTokenData: any) => {
     // 如果是GET 请求需要把参数也要拼到url后面
-    if (data) {
-        url = `${url}?${qs.stringify(data)}`
+    if (doSignTokenData) {
+        url = `${url}?${qs.stringify(doSignTokenData)}`
     }
     let date = new Date()
     let timestamp = date.getTime()
@@ -36,11 +35,11 @@ export const IsWX = () => {
 }
 
 // 4.获取参数
-export const getUrlParam = (name:string) => {
-    var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i')
-    var regRewrite = new RegExp('(^|/)' + name + '/([^/]*)(/|$)', 'i')
-    var r = window.location.search.substr(1).match(reg)
-    var q = window.location.pathname.substr(1).match(regRewrite)
+export const getUrlParam = (name: string) => {
+    let reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i')
+    let regRewrite = new RegExp('(^|/)' + name + '/([^/]*)(/|$)', 'i')
+    let r = window.location.search.substr(1).match(reg)
+    let q = window.location.pathname.substr(1).match(regRewrite)
     if (r != null) {
         return unescape(r[2])
     } else if (q != null) {
@@ -50,32 +49,11 @@ export const getUrlParam = (name:string) => {
     }
 }
 
-export const getUrlPara = (paraName: any) => {
-    let url = document.location.toString()
-    let arrObj = url.split('?')
-    let arrPara: any[] = []
-    if (arrObj.length > 1) {
-        if (arrObj.length > 2) {
-            arrPara = arrObj[2].split('&')
-        } else {
-            arrPara = arrObj[1].split('&')
-        }
-        var arr
-        for (var i = 0; i < arrPara.length; i++) {
-            arr = arrPara[i].split('=')
-            if (arr !== null && arr[0] === paraName) {
-                return arr[1]
-            }
-        }
-        return ''
-    } else {
-        return ''
-    }
-}
 // 5.微信登录，后端调用微信API登录后，直接调用后端接口就行
-export const wxLogin = (API: any, http: any, _this: any, store: any, cb: any) => {
-    let paramsCode: string | any = getUrlParam('code')
+export const wxLogin = (cb: any, that: any) => {
+    let paramsCode = this.getUrlParam('code')
     const code = sessionStorage.getItem('code')
+    let shareCode = this.$route.query.shareCode
     if (!paramsCode && !code) {
         let url = location.href.split('#')
         let url1 = url[1]
@@ -88,47 +66,58 @@ export const wxLogin = (API: any, http: any, _this: any, store: any, cb: any) =>
         // if (_this.isLoading) {
         //   return
         // }
-        _this.isLoading = true
+        this.isLoading = true
         sessionStorage.setItem('code', paramsCode)
         let params = JSON.stringify({
             logincode: paramsCode,
             ip: sessionStorage.getItem('ip'),
-            shareCode: ''
+            shareCode
         })
         http({
-            baseUrl: API.lkDrDev,
+            baseUrl: API.AuthorizeUrl,
             url: API.wxWebLogin,
             method: 'POST',
-            params: params
-        }, (res: any) => {
-            if (res.data.c === 2000) {
+            params
+        }, (res) => {
+            console.log('请求结果=======')
+            this.isLoading = false
+            if (res && res.data && res.data.c === 2000) {
+                let date = new Date()
+                let oldTime = date.getTime()
+                store.set('storeTime', oldTime)
                 let resData = res.data.d
-                _this.userId = resData.userId
-                console.log(_this.userId, 11111111999999999)
+                this.userId = resData.userId
+                this.userInfo = resData
+                this.userId = resData.userId
+                this.userToken = resData.UserToken
+                this.avatarUrl = resData.wxheadImgUrl
+                this.nickName = resData.nickName
+                // this.gender = resData.gender || '2'
                 store.set('userInfo', resData)
                 store.set('userId', resData.userId)
+                // store.set('gender', resData.gender + '')
                 store.set('userToken', resData.UserToken)
-                store.set('avatarUrl', resData.avatarUrl)
+                store.set('avatarUrl', resData.wxheadImgUrl)
                 store.set('nickName', resData.nickName)
-                let url = `${window.location.host}${window.location.pathname}`
-                store.set('fetchServiceUrl', url)
+                // let url = `${window.location.host}${window.location.pathname}`
+                store.set('fetchServiceUrl', API.fetchServiceUrl)
+                this.getGender()
                 if (cb && typeof cb === 'function') {
                     cb()
                 }
             } else {
+                toastMsg(res, this, API.wxWebLogin)
                 sessionStorage.removeItem('code')
             }
-            _this.isLoading = false
-        }, (ex: any) => {
-            _this.isLoading = false
-            sessionStorage.removeItem('code')
+        }, (err) => {
+            console.log(err)
         })
     }
 }
 
 // 6.获取ul容器当前已滚动的高度
-export const getScrollTop = (_this: any) => {
-    return _this.$refs.viewBox.scrollTop
+export const getScrollTop = (that: any) => {
+    return that.$refs.viewBox.scrollTop
 }
 
 // 7.获取当前可视范围的高度
@@ -143,8 +132,8 @@ export const getClientHeight = () => {
 }
 
 // 8.获取ul容器的高度
-export const getScrollHeight = (_this: any) => {
-    return _this.$refs.viewBox.scrollHeight
+export const getScrollHeight = (that: any) => {
+    return that.$refs.viewBox.scrollHeight
 }
 // 9.微信config授权, 通过接口请求返回 获取授权所需要的相关信息
 export const configWX = (axios: any, wx: any) => {
@@ -154,7 +143,7 @@ export const configWX = (axios: any, wx: any) => {
         return
     }
     // 配置微信 config信息
-    var data
+    let data
     if (windowUrl.split('#')[0]) {
         data = {
             url: windowUrl.split('#')[0]
@@ -171,7 +160,7 @@ export const configWX = (axios: any, wx: any) => {
         method: 'get',
         params: data,
         headers: {
-            'appkey': store.get('appKey')
+            appkey: store.get('appKey')
         }
     }).then((res: any) => {
         if (res && res.data && res.data.c === 200) {
@@ -197,12 +186,13 @@ export const configWX = (axios: any, wx: any) => {
     })
 }
 // 10 错误提示
-export const toastMsg = (res: any, _this: any, url: string) => {
+export const toastMsg = (res: any, that: any, url: string) => {
     let status = ''
     if (res && res.status) {
         status = res.status
     }
-    if (res && res.data && (res.data.message || res.data.msg || res.data.m)) { // 因接口参数或是服务器错误导致的报错信息(带有message或msg的响应信息)
+    if (res && res.data && (res.data.message || res.data.msg || res.data.m)) {
+        // 因接口参数或是服务器错误导致的报错信息(带有message或msg的响应信息)
         let msg = res.data.message || res.data.msg || res.data.m
         sessionStorage.setItem('errUrl', url + ':' + status + ':' + msg)  // 缓存报错的接口
         Toast({
@@ -219,7 +209,7 @@ export const toastMsg = (res: any, _this: any, url: string) => {
         })
     } else { // 其他未知报错信息
         console.log('出现断网提示界面=====================')
-        _this.loadError = true
+        that.loadError = true
         // Toast({
         //   message: `${url}\ncode:` + status + '; 网络不给力，请点击重试',
         //   duration: 3000
@@ -234,11 +224,11 @@ export const notifyMsg = () => {
         background: '#51B79C'
     })
 }
-export const requestUserInfo = (userId: string, _this: any) => {
+export const requestUserInfo = (userId: string, that: any) => {
     return new Promise((resolve, reject) => {
         let param = {
-            'data': {},
-            'userId': userId
+            data: {},
+            userId
         }
         http({
             baseUrl: API.baseUrl,
@@ -246,14 +236,14 @@ export const requestUserInfo = (userId: string, _this: any) => {
             method: 'POST',
             params: JSON.stringify(param)
         }, (res: any) => {
-            _this.isLoading = false
+            that.isLoading = false
             let result = res && res.data || ''
             if (result && result.code === 20000) {
                 let rData = result.data
                 let gender = rData.gender
                 resolve(gender)
             } else {
-                toastMsg(res, _this, API.getUserBaseInfo)
+                toastMsg(res, that, API.getUserBaseInfo)
                 reject(0)
             }
         }, (err: any) => {
@@ -263,8 +253,8 @@ export const requestUserInfo = (userId: string, _this: any) => {
     })
 }
 
-export const getThemeColor = (_this: any) => {
-    let theme = _this.$route.query.theme
+export const getThemeColor = (that: any) => {
+    let theme = that.$route.query.theme
     if (theme === '1') {
         // 蓝色
         return '#347FFF'

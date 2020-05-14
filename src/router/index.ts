@@ -8,18 +8,7 @@ console.log(process.env, '环境变量')
 const routes: RouteConfig[] = [
   {
     path: '/',
-    component: () => import('@/layout/layout.vue'),
-    redirect: '/dashboard',
-    children: [
-        {
-            path: 'dashboard',
-            name: 'dashboard',
-            meta: {
-                main: true
-            },
-            component: () => import(/* webpackChunkName: "dashboard" */ '@/views/dashboard.vue'),
-        }
-    ]
+    component: () => import('@/views/Home.vue'),
   },
   {
     path: '/home',

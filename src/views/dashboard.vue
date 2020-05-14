@@ -9,7 +9,6 @@
 // @ is an alias to /src
 import HelloWorld from '@/components/HelloWorld.vue'
 import { Component, Vue, Model } from 'vue-property-decorator';
-import { getDataList } from '../request/index'
 @Component({
     components: {
         HelloWorld
@@ -27,9 +26,7 @@ export default class Dashboard extends Vue {
       console.log(1111)
     }
     private mounted() {
-        getDataList(this.params).then((res) => {
-            console.log(res, 2222222)
-        })
+      console.log(2222)
     }
 }
 </script>

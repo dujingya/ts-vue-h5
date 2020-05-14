@@ -9,6 +9,9 @@
     ]
   },
   "rules": {
+    "object-literal-sort-keys": false,
+    "prefer-for-of": false,
+    "max-line-length": [false, 1000],
     "no-console": false,
     "no-for-in-array": false,
     "no-empty": false,
@@ -31,7 +34,7 @@
       "check-space"
     ],
     "eofline": false,
-    "indent": [2, 4],//缩进风格
+    "indent": ["off", 4],//缩进风格
     "interface-name": false,
     "no-consecutive-blank-lines": false,
     "object-literal-sort-keys": false,
@@ -44,15 +47,18 @@
       "check-whitespace"
     ],
     "quotemark": [false, "single"],
-    "semicolon":[false, "always", "ignore-interfaces"], //分号的使用规则
-    "trailing-comma": [false, { //对尾随逗号的校验
+    "semicolon":[false, "always"], //分号的使用规则
+    "trailing-comma": [false, "always",{ //对尾随逗号的校验
       "multiline": {
-        "objects": "ignore",
+        "objects": "never",
         "arrays": "never",
         "functions": "never",
-        "typeLiterals": "ignore"
+        "typeLiterals": "never"
       },
       "esSpecCompliant": true //是否允许尾随逗号出现在剩余变量中
     }]
+  },
+  "jsRules": {
+    "object-literal-sort-keys": false
   }
 }
