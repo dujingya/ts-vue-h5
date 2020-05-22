@@ -8,7 +8,7 @@ console.log(process.env, '环境变量')
 const routes: RouteConfig[] = [
   {
     path: '/',
-    component: () => import('@/views/Home.vue'),
+    component: () => import('@/views/index.vue'),
   },
   {
     path: '/home',
@@ -60,7 +60,7 @@ const routes: RouteConfig[] = [
 ];
 // console.log(process.env.BASE_URL, 8888)
 const router = new VueRouter({
-  mode: 'history',
+  mode: 'hash',
   base: process.env.BASE_URL,
   routes,
   scrollBehavior(to, from, savedPostion) {
