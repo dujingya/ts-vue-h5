@@ -3,6 +3,7 @@ import App from './App.vue';
 import router from './router';
 import store from './store';
 import 'lib-flexible'
+import 'babel-polyfill'
 import vueMoment from 'vue-moment'
 import { Loading, Button, Dialog } from 'vant'
 import 'vant/lib/index.css'
